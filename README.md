@@ -1,9 +1,9 @@
 # A healthcheck script for docker containers connected to gluetun
 
-The container has to have either of the following sets of programs installed:
+The container has to have either of the following sets of programs:
 
 * `cut`, `echo`, `nc`, `sh`, `which`
-* `bash`, `cut`, `echo`, `nc`, `which`
+* `bash`, `cut`, `echo`, `nc`, `timeout`, `which`
 
 ## How to use:
 
@@ -11,7 +11,7 @@ The container has to have either of the following sets of programs installed:
 
 ```YAML
 environment:
-  - HEALTHCHECK_TARGETS=cloudflare.com:443 google.com:443
+  - HEALTHCHECK_TARGETS=127.0.0.1:443 cloudflare.com:443
 ```
 
 2. Add the script to the docker container:
@@ -20,7 +20,7 @@ Either take the contents of `docker-compose.sh` and put them as the `test` scrip
 
 ```YAML
 healthcheck:
-  test: sh -c "HEALTHCHECK_TIMEOUT=\$${HEALTHCHECK_TIMEOUT:-5}; HEALTHCHECK_EXEC=\$$(if which nc>/dev/null; then echo 'nc'; elif which bash>/dev/null; then echo 'bash'; else echo 'exit 1'; fi); for TARGET in \$$HEALTHCHECK_TARGETS; do export ADDRESS=\$$(echo \$$TARGET | cut -d':' -f1); export PORT=\$$(echo \$$TARGET | cut -d':' -f2); if [ \$$HEALTHCHECK_EXEC = 'nc' ]; then nc -z -w \$$HEALTHCHECK_TIMEOUT \$$ADDRESS \$$PORT || exit 1; elif [ \$$HEALTHCHECK_EXEC = 'bash' ]; then (timeout \$$HEALTHCHECK_TIMEOUT bash -c '</dev/tcp/\$$ADDRESS/\$$PORT || exit 1' 2> /dev/null ) || exit 1; else echo 'HEALTHCHECK_EXEC could not be determined' \$$HEALTHCHECK_EXEC; fi done"
+  test: sh -c "healthcheck_timeout=\$${HEALTHCHECK_TIMEOUT:-5}; healthcheck_exec=\$$(if which nc>/dev/null; then echo 'nc'; elif which bash>/dev/null; then echo 'bash'; else echo 'exit 1'; fi); for target in \$$HEALTHCHECK_TARGETS; do export address=\$$(echo \$$target | cut -d':' -f1); export port=\$$(echo \$$target | cut -d':' -f2); if [ \$$healthcheck_exec = 'nc' ]; then nc -z -w \$$healthcheck_timeout \$$address \$$port || exit 1; elif [ \$$healthcheck_exec = 'bash' ]; then (timeout \$$healthcheck_timeout bash -c '</dev/tcp/\$$address/\$$port || exit 1' 2> /dev/null ) || exit 1; else echo 'healthcheck_exec could not be determined' \$$healthcheck_exec; fi done"
   interval: 60s
 ```
 
@@ -34,3 +34,13 @@ healthcheck:
   interval: 60s
 ```
 
+## Options
+
+### Timeout
+
+The default timeout of 5 seconds, used for checking each target in `HEALTHCHECK_TARGETS`, can be changed with the environment variable `HEALTHCHECK_TIMEOUT` like this:
+
+```YAML
+environment:
+  - HEALTHCHECK_TIMEOUT=10
+```
