@@ -1,16 +1,16 @@
-HEALTHCHECK_TIMEOUT=${HEALTHCHECK_TIMEOUT:-5};
-HEALTHCHECK_EXEC=$(if which nc>/dev/null; then echo 'nc'; elif which bash>/dev/null; then echo 'bash'; else echo 'exit 1'; fi);
+healthcheck_timeout=${HEALTHCHECK_TIMEOUT:-5};
+healthcheck_exec=$(if which nc>/dev/null; then echo 'nc'; elif which bash>/dev/null; then echo 'bash'; else echo 'exit 1'; fi);
 
-for TARGET in $HEALTHCHECK_TARGETS; do
-  export ADDRESS=$(echo $TARGET | cut -d':' -f1);
-  export PORT=$(echo $TARGET | cut -d':' -f2);
+for target in $HEALTHCHECK_TARGETS; do
+  export address=$(echo $target | cut -d':' -f1);
+  export port=$(echo $target | cut -d':' -f2);
 
-  if [ $HEALTHCHECK_EXEC = 'nc' ]; then
-    nc -z -w $HEALTHCHECK_TIMEOUT $ADDRESS $PORT || exit 1;
-  elif [ $HEALTHCHECK_EXEC = 'bash' ]; then
-    (timeout $HEALTHCHECK_TIMEOUT bash -c '</dev/tcp/$ADDRESS/$PORT || exit 1' 2> /dev/null ) || exit 1;
+  if [ $healthcheck_exec = 'nc' ]; then
+    nc -z -w $healthcheck_timeout $address $port || exit 1;
+  elif [ $healthcheck_exec = 'bash' ]; then
+    (timeout $healthcheck_timeout bash -c '</dev/tcp/$address/$port || exit 1' 2> /dev/null ) || exit 1;
   else
-    echo 'HEALTHCHECK_EXEC could not be determined'
-    $HEALTHCHECK_EXEC;
+    echo 'healthcheck_exec could not be determined'
+    $healthcheck_exec;
   fi
 done
