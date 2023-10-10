@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 cat network-healthcheck.sh | \
   sed --regexp-extended 's/\$/\\\\$\$/g' | \
