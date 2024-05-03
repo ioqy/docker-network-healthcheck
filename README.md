@@ -3,7 +3,7 @@
 The container has to have either of the following sets of programs:
 
 * `cut`, `echo`, `nc`, `sh`, `which`
-* `bash`, `cut`, `echo`, `nc`, `timeout`, `which`
+* `bash`, `cut`, `echo`, `timeout`, `which`
 
 ## How to use:
 
